@@ -17,4 +17,4 @@ def ping():
     return jsonify({"message": "API is alive"}), 200
 if __name__ == "__main__":
     # host 0.0.0.0 -> reachable from other devices on your network (optional)
-    app.run(host="0.0.0.0", port=0, debug=True)
+    app.run(host="0.0.0.0", port=0, debug=True)# Case_4
