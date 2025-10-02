@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -6,17 +7,20 @@ from models import SurveySubmission, StoredSurveyRecord
 from storage import append_json_line
 
 app = Flask(__name__)
-# Allow cross-origin requests so the static HTML can POST from localhost or file://
 CORS(app, resources={r"/v1/*": {"origins": "*"}})
+
+def sha256_hex(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    """Simple health check endpoint."""
     return jsonify({
         "status": "ok",
         "message": "API is alive",
         "utc_time": datetime.now(timezone.utc).isoformat()
     })
+
 
 @app.post("/v1/survey")
 def submit_survey():
@@ -29,13 +33,31 @@ def submit_survey():
     except ValidationError as ve:
         return jsonify({"error": "validation_error", "detail": ve.errors()}), 422
 
+    # ✅ Hash PII (email + age)
+    hashed_email = sha256_hex(submission.email)
+    hashed_age = sha256_hex(str(submission.age))
+
+    # ✅ Generate submission_id if not provided
+    if submission.submission_id:
+        submission_id = submission.submission_id
+    else:
+        current_hour = datetime.now(timezone.utc).strftime("%Y%m%d%H")
+        submission_id = sha256_hex(submission.email + current_hour)
+
+    # ✅ Build stored record (never store raw email or age)
     record = StoredSurveyRecord(
-        **submission.dict(),
+        email=hashed_email,
+        age=hashed_age,
+        answers=submission.answers,
+        user_agent=submission.user_agent,
+        submission_id=submission_id,
         received_at=datetime.now(timezone.utc),
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
+
     append_json_line(record.dict())
-    return jsonify({"status": "ok"}), 201
+    return jsonify({"status": "ok", "submission_id": submission_id}), 201
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
