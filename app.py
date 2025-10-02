@@ -9,11 +9,6 @@ from storage import append_json_line
 app = Flask(__name__)
 CORS(app, resources={r"/v1/*": {"origins": "*"}})
 
-
-def sha256_hex(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
 @app.route("/ping", methods=["GET"])
 def ping():
     return jsonify({
