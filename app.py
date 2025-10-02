@@ -34,7 +34,14 @@ def submit_survey():
         received_at=datetime.now(timezone.utc),
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
-    append_json_line(record.dict())
+
+    # Convert to dict and ensure datetime is serialized
+    data = record.dict()
+    if isinstance(data.get("received_at"), datetime):
+        data["received_at"] = data["received_at"].isoformat()
+
+    append_json_line(data)
+
     return jsonify({"status": "ok"}), 201
 
 if __name__ == "__main__":
