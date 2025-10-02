@@ -9,6 +9,7 @@ from storage import append_json_line
 app = Flask(__name__)
 CORS(app, resources={r"/v1/*": {"origins": "*"}})
 
+
 def sha256_hex(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
@@ -55,7 +56,13 @@ def submit_survey():
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
 
-    append_json_line(record.dict())
+    # ✅ Ensure JSON-serializable dict (datetime → ISO string)
+    record_dict = record.dict()
+    record_dict["received_at"] = record.received_at.isoformat()
+
+    # Save to disk
+    append_json_line(record_dict)
+
     return jsonify({"status": "ok", "submission_id": submission_id}), 201
 
 
