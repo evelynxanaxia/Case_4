@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel, Field, EmailStr, ValidationError
 from models import SurveySubmission, StoredSurveyRecord
 from storage import append_json_line
 
