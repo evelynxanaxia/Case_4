@@ -34,18 +34,15 @@ def submit_survey():
     except ValidationError as ve:
         return jsonify({"error": "validation_error", "detail": ve.errors()}), 422
 
-    # ✅ Hash PII (email + age)
     hashed_email = sha256_hex(submission.email)
     hashed_age = sha256_hex(str(submission.age))
 
-    # ✅ Generate submission_id if not provided
     if submission.submission_id:
         submission_id = submission.submission_id
     else:
         current_hour = datetime.now(timezone.utc).strftime("%Y%m%d%H")
         submission_id = sha256_hex(submission.email + current_hour)
 
-    # ✅ Build stored record (never store raw email or age)
     record = StoredSurveyRecord(
         email=hashed_email,
         age=hashed_age,
@@ -56,7 +53,6 @@ def submit_survey():
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
 
-    # ✅ Ensure JSON-serializable dict (datetime → ISO string)
     record_dict = record.dict()
     record_dict["received_at"] = record.received_at.isoformat()
 
