@@ -14,14 +14,13 @@ class SurveySubmission(BaseModel):
     submission_id: Optional[str] = None
 
 class StoredSurveyRecord(BaseModel):
-    name: str
+    name: str 
     email: str
     age: str
     consent: bool
-    rating: int
-    comments: Optional[str] = None
-    source: str
-    user_agent: Optional[str] = None
-    submission_id: str
+    rating: int 
+    comments: Optional[str] 
+    user_agent: Optional[str]
+    submission_id: Optional[str]
     received_at: datetime
     ip: str
